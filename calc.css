@@ -4,6 +4,10 @@
     box-sizing: border-box;
   }
 
+  body {
+    background-color: brown;
+  }
+
   .calc-main {
     width: 300px;
     height: 500px;
@@ -18,7 +22,9 @@
     height: 75px;
     background-color: black;
     display: flex;
-    align-self: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
     margin-top: 20px;
   }
 
@@ -32,6 +38,25 @@
     margin-bottom: 20px;
   }
 
+  button {
+    background-color: bisque;
+  }
+
   #ac, #del {
     grid-column: span 2;
+  }
+
+  #main-text {
+    font-size: 30px;
+    color:white;
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: space-around;
+    padding: 10px;
+  }
+
+  #mini-text {
+    align-self: flex-end;
+    font-size: 20px;
+    color: lightgrey;
   }
