@@ -47,11 +47,18 @@ const calculator = {
     this.currentAns = null;
     this.buttonsPressed = [];
     this.mainTextContainer.textContent = "";
+    this.miniTextContainer.textContent = "";
+
   },
 
   delButton: function () {
     this.buttonsPressed.pop();
+    if (this.miniTextContainer.textContent != "") {
+      this.mainTextContainer.textContent = this.miniTextContainer.textContent;
+      this.miniTextContainer.textContent = "";
+    };
     this.mainTextContainer.textContent = this.mainTextContainer.textContent.slice(0, this.mainTextContainer.textContent.length - 1);
+
   },
 
   operatorMapping: new Map([
@@ -67,7 +74,7 @@ const calculator = {
     let operators = [];
    
     this.buttonsPressed.forEach (function (button) {
-      if (button.className == "num") {
+      if (button.className == "num" || button.id == "decimal") {
           if (num == undefined) {
             num = button.textContent
           } else {
