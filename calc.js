@@ -1,104 +1,177 @@
-/* 
-Current Problems
-1 - After you've done an operation with two numbers, it doesn't clear out the screen when you press the next number.
-2 - It also doesn't properly clear out the memory, meaning weird numbers appear when doing calculations.
-3 - After you've done an operation with two numbers, it doesn't continue with operations on the previous answer when you press an operator.
-    The same answer is still there. The mini text does reflect the buttons pressed alongside the previous answer though (in this case).
-4 - Calc doesn't work with more than two numbers.
-5 - Calc doesn't respect the rules of BIDMAS.
-
- */
-
 const calculator = {
-  currentAns: null,
-  previousAns: null,
-  buttonsPressed: [],
-  mainTextContainer: document.querySelector('#main-text'),
-  miniTextContainer: document.querySelector('#mini-text'),
+    currentAns: null,
+    previousAns: null,
+    buttonsPressed: [], //should be implemented/treated as a queue
+    mainTextContainer: document.querySelector('#main-text'),
+    miniTextContainer: document.querySelector('#mini-text'),
+    operatorMapping: new Map([
+        ["+", function (num1, num2) {return num1 + num2;}],
+        ["-", function (num1, num2) {return num1 - num2;}],
+        ["×", function (num1, num2) {return num1 * num2;}],
+        ["÷", function (num1, num2) {return num1 / num2;}]
+      ]),
 
-  displayButtons: function () {
-    const buttons = document.querySelectorAll("button");
-    buttons.forEach((item) => {
-      item.addEventListener('click', () => { 
-        console.log("I've been clicked!");
-        if (item.id == "del") {
-          this.delButton()
-        } else if (item.id == "ac") {
-          this.acButton()
-        } else if (item.id == "equals") {
-          this.equals()
-        } else {
-          this.buttonsPressed.push(item);
-          this.mainTextContainer.textContent = this.mainTextContainer.textContent + item.textContent;
+    syntaxErrors: function (buttonsPressed) {
+        let syntaxError = false;
+        i = 0;
+        while (syntaxError == false && i < buttonsPressed.length) {
+            if (i == 0) {
+                if (buttonsPressed[i].className == 'operator' && this.previousAns == null) {
+                    syntaxError = true;
+                }
+            } else {
+                if (buttonsPressed[i].className == 'operator' && buttonsPressed[i-1].className != 'num' && buttonsPressed[i+1].className != 'num') {
+                    syntaxError = true;
+                } else if (buttonsPressed[i].id == 'decimal' && buttonsPressed[i+1].className != 'num') {
+                    syntaxError = true;
+                }
+            };
+
+            i++;
         }
+
+        if (syntaxError == true) {
+            return true;
+        } else {
+            return false;
+        }
+    },
+
+    mathErrors: function (buttonsPressed) {
+        mathError = false;
+        for (let index = 0; index < buttonsPressed.length; index++) {
+            if (buttonsPressed[index].id == 'divide' && buttonsPressed[index+1].id == '0') {
+                mathError = true;
+                break;
+            }
+        };
+
+        if (mathError = true) {
+            return true;
+        } else {
+            return false;
+        }
+    },
+
+    calculate: function (nums, operators) {
+        let intermediateAns;
+        while (operators.length != 0) {
+            intermediateAns = this.operatorMapping.get(operators[0])(nums[0], nums[1]);
+            nums.shift();
+            nums.shift();
+            nums.unshift(intermediateAns);
+            operators.shift();
+        };
+
+        return intermediateAns;
+    },
+
+    parser: function (buttonsPressed) {
+        let num;
+        let nums = [];
+        let operators = [];
+
+        if (this.previousAns != null) {
+            nums.push(this.previousAns)
+        };
+
+        buttonsPressed.forEach ((button) => {
+            if (button.className == "num") {
+                if (num == undefined || num == '') {
+                  num = button.textContent
+                } else {
+                  num = num + button.textContent;
+                };
+              
+            } else if (button.className == "operator") {
+              num = Number(num);
+              nums.push(num);
+              num = undefined;
+              operators.push(button.textContent)
+            }
+            
+          });
         
-      });
-    });
-    
-  },
+        if (num != '' || num != undefined) {
+            nums.push(Number(num));
+        };
 
-  displayAns: function () {
-    // put calculation expression in mini text div. get this from function above
-    this.miniTextContainer.textContent = this.mainTextContainer.textContent;
-    this.mainTextContainer.textContent = this.currentAns;
-  },
+        this.currentAns = this.calculate(nums, operators)
+    },
 
-  acButton: function () {
-    this.currentAns = null;
-    this.buttonsPressed = [];
-    this.mainTextContainer.textContent = "";
-    this.miniTextContainer.textContent = "";
+    addEventListeners: function () {
+        const buttons = document.querySelectorAll('button');
 
-  },
+        buttons.forEach((button) => {
+            button.addEventListener('click', () => {
+                if (button.className == 'num') {
+                    this.numEventListener(button);
+                } else if (button.className == 'operator') {
+                    this.operatorEventListener(button);
+                } else if (button.id == 'equals') {
+                    this.equalsEventListener(this.buttonsPressed);
+                } else if (button.id == 'del') {
+                    this.delEventListener();
+                } else {
+                    this.acEventListener();
+                }
+            })
+        })
+    },
 
-  delButton: function () {
-    this.buttonsPressed.pop();
-    if (this.miniTextContainer.textContent != "") {
-      this.mainTextContainer.textContent = this.miniTextContainer.textContent;
-      this.miniTextContainer.textContent = "";
-    };
-    this.mainTextContainer.textContent = this.mainTextContainer.textContent.slice(0, this.mainTextContainer.textContent.length - 1);
-
-  },
-
-  operatorMapping: new Map([
-    ["+", function (num1, num2) {return num1 + num2;}],
-    ["-", function (num1, num2) {return num1 - num2;}],
-    ["×", function (num1, num2) {return num1 * num2;}],
-    ["÷", function (num1, num2) {return num1 / num2;}]
-  ]),
-
-  equals: function () {
-    let num;
-    let nums = [];
-    let operators = [];
-   
-    this.buttonsPressed.forEach (function (button) {
-      if (button.className == "num" || button.id == "decimal") {
-          if (num == undefined) {
-            num = button.textContent
-          } else {
-            num = num + button.textContent;
-          };
-        
-      } else if (button.className == "operator") {
-        num = Number(num);
-        nums.push(num);
-        num = undefined;
-        operators.push(button.textContent)
+    numEventListener: function (button) {
+      if (this.buttonsPressed == []) {
+        this.mainTextContainer.textContent = button.textContent;
+        this.buttonsPressed.push(button);
+      } else {
+        this.mainTextContainer.textContent = this.mainTextContainer.textContent + button.textContent;
+        this.buttonsPressed.push(button);
       }
-      
-    });
-    
-    // this is to put any numbers in the nums stack after pressing equals. They may not get evaluated otherwise.
-    nums.push(Number(num));
+    },
 
-    // This assumes only 2 numbers are entered. Need to generalise it so it works with n numbers and n-1 operators.
-    operator = operators[0];
-    this.currentAns = this.operatorMapping.get(operator)(nums[0], nums[1]);
+    operatorEventListener: function (button) {
+        if (this.currentAns != null) {
+            // don't forget to check for previousAns in the relevant function when evaluating the calculation
+            this.previousAns = this.currentAns;
+            this.currentAns = null;
+            this.mainTextContainer.textContent = this.mainTextContainer.textContent + button.textContent;
+            this.buttonsPressed.push(button);
+          } else {
+            this.mainTextContainer.textContent = this.mainTextContainer.textContent + button.textContent;
+            this.buttonsPressed.push(button);
+          }
+    },
 
-    this.displayAns();
-  }
+    equalsEventListener: function (buttonsPressed) {
+        if (buttonsPressed != []) {
+            this.miniTextContainer.textContent = this.mainTextContainer.textContent;
+            if (this.syntaxErrors == true || this.mathErrors == true) {
+                // display syntax error on screen
+                this.mainTextContainer.textContent = 'Error';
+            } else {
+                this.parser(buttonsPressed);
+                this.mainTextContainer.textContent = this.currentAns;
+            }
+        }
+    },
+
+    delEventListener: function () {
+        this.buttonsPressed.pop();
+        if (this.miniTextContainer.textContent != '') {
+            this.mainTextContainer.textContent = this.miniTextContainer.textContent;
+            this.miniTextContainer.textContent = '';
+        };
+        this.mainTextContainer.textContent = this.mainTextContainer.textContent.slice(0, this.mainTextContainer.textContent.length - 1);
+
+    },
+
+    acEventListener: function () {
+        this.currentAns = null;
+        this.buttonsPressed = [];
+        this.mainTextContainer.textContent = '';
+        this.miniTextContainer.textContent = '';
+    }
+
 }
 
-calculator.displayButtons();
+calculator.addEventListeners()
