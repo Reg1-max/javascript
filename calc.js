@@ -20,9 +20,7 @@ const calculator = {
                     syntaxError = true;
                 }
             } else {
-                if (buttonsPressed[i].className == 'operator' && buttonsPressed[i-1].className != 'num' && buttonsPressed[i+1].className != 'num') {
-                    syntaxError = true;
-                } else if (buttonsPressed[i].id == 'decimal' && buttonsPressed[i+1].className != 'num') {
+                if (buttonsPressed[i].className == 'operator' && (buttonsPressed[i-1].className != 'num' || buttonsPressed[i+1].className != 'num')) {
                     syntaxError = true;
                 }
             };
@@ -30,11 +28,7 @@ const calculator = {
             i++;
         }
 
-        if (syntaxError == true) {
-            return true;
-        } else {
-            return false;
-        }
+        return syntaxError;
     },
 
     mathErrors: function (buttonsPressed) {
@@ -46,11 +40,7 @@ const calculator = {
             }
         };
 
-        if (mathError = true) {
-            return true;
-        } else {
-            return false;
-        }
+        return mathError;
     },
 
     calculate: function (nums, operators) {
@@ -150,7 +140,7 @@ const calculator = {
     equalsEventListener: function (buttonsPressed) {
         if (buttonsPressed != []) {
             this.miniTextContainer.textContent = this.mainTextContainer.textContent;
-            if (this.syntaxErrors == true || this.mathErrors == true) {
+            if (this.syntaxErrors(buttonsPressed) || this.mathErrors(buttonsPressed)) {
                 // display syntax error on screen
                 this.mainTextContainer.textContent = 'Error';
             } else {
