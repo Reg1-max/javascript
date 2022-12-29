@@ -55,14 +55,19 @@ const calculator = {
 
     calculate: function (nums, operators) {
         let intermediateAns;
+        let operator;
+        let number1;
+        let number2;
         while (operators.length != 0) {
-            intermediateAns = this.operatorMapping.get(operators[0])(nums[0], nums[1]);
+            operator = operators[0];
+            number1 = nums[0];
+            number2 = nums[1];
+            intermediateAns = this.operatorMapping.get(operator)(number1, number2);
             nums.shift();
             nums.shift();
             nums.unshift(intermediateAns);
             operators.shift();
         };
-
         return intermediateAns;
     },
 
@@ -71,7 +76,7 @@ const calculator = {
         let nums = [];
         let operators = [];
 
-        if (this.previousAns != null) {
+        if (this.previousAns != null && buttonsPressed[0].className == 'operator') {
             nums.push(this.previousAns)
         };
 
